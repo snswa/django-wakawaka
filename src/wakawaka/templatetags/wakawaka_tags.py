@@ -13,7 +13,10 @@ register = Library()
 WIKI_WORDS_REGEX = re.compile(r'\b%s\b' % WIKI_SLUG)
 
 
-def replace_wikiwords(value, group=None):
+def replace_wikiwords(value, group=None,
+                      exists_template=r'<a href="{url:>s}">{slug:>s}</a>',
+                      missing_template=r'<a class="doesnotexist" href="{url:>s}">{slug:>s}</a>',
+                      ):
     def replace_wikiword(m):
         slug = m.group(1)
         try:
@@ -25,7 +28,7 @@ def replace_wikiwords(value, group=None):
                 url = group.content_bridge.reverse('wakawaka_page', group, kwargs=kwargs)
             else:
                 url = reverse('wakawaka_page', kwargs=kwargs)
-            return r'<a href="%s">%s</a>' % (url, slug)
+            return exists_template.format(url=url, slug=slug)
         except ObjectDoesNotExist:
             kwargs = {
                 'slug': slug,
@@ -34,21 +37,29 @@ def replace_wikiwords(value, group=None):
                 url = group.content_bridge.reverse('wakawaka_edit', group, kwargs=kwargs)
             else:
                 url = reverse('wakawaka_edit', kwargs=kwargs)
-            return r'<a class="doesnotexist" href="%s">%s</a>' % (url, slug)
+            return missing_template.format(url=url, slug=slug)
     return mark_safe(WIKI_WORDS_REGEX.sub(replace_wikiword, value))
 
 
 @register.filter
-def wikify(value):
+def wikify(value, filter_name=None):
     """Makes WikiWords"""
-    return replace_wikiwords(value)
+    if filter_name == 'creole':
+        return replace_wikiwords(
+            value,
+            exists_template=r'[[{url:>s}|{slug:>s}]]',
+            missing_template=r'[[{url:>s}|{slug:>s}?]]',
+            )
+    else:
+        # Use default templates
+        return replace_wikiwords(value)
 
 
 class WikifyContentNode(Node):
     def __init__(self, content_expr, group_var):
         self.content_expr = content_expr
         self.group_var = Variable(group_var)
-    
+
     def render(self, context):
         content = self.content_expr.resolve(context)
         group = self.group_var.resolve(context)
