@@ -10,3 +10,6 @@ DEFAULT_INDEX = getattr(settings, 'WAKAWAKA_DEFAULT_INDEX', 'WikiIndex')
 # is also a CamelCase/OtherSide
 WIKI_SLUG = r'((([A-Z]+[a-z]+){2,})(/([A-Z]+[a-z]+){2,})*)'
 WIKI_SLUG = getattr(settings, 'WAKAWAKA_SLUG_REGEX', WIKI_SLUG)
+
+EDITOR_COLUMNS = getattr(settings, 'WAKAWAKA_EDITOR_COLUMNS', 80)
+EDITOR_ROWS = getattr(settings, 'WAKAWAKA_EDITOR_ROWS', 20)

@@ -3,9 +3,16 @@ from django.utils.translation import ugettext_lazy as _, ugettext
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from wakawaka.models import Revision, WikiPage
+from wakawaka import settings
 
 class WikiPageForm(forms.Form):
-    content = forms.CharField(label=_('Content'), widget=forms.Textarea(attrs={'rows': 30}))
+    content = forms.CharField(
+        label=_('Content'),
+        widget=forms.Textarea(attrs={
+            'cols': settings.EDITOR_COLUMNS,
+            'rows': settings.EDITOR_ROWS,
+        }),
+    )
     message = forms.CharField(label=_('Change message (optional)'), widget=forms.TextInput, required=False)
 
     def save(self, request, page, *args, **kwargs):
