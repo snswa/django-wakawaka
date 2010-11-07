@@ -20,6 +20,7 @@ class WikiPage(models.Model):
         verbose_name_plural = _("Wiki pages")
         ordering = ['slug']
         permissions = (
+            ("can_view", "Can view the wiki."),
             ("reset_lock", "Can reset the edit lock of a wiki page."),
         )
 
