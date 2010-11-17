@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render_to_response, get_object_or_404
@@ -13,7 +14,12 @@ from django.contrib.auth.models import User
 
 from wakawaka.forms import WikiPageForm, DeleteWikiPageForm
 from wakawaka.models import WikiPage, Revision
-from wakawaka.settings import DEFAULT_INDEX, LOCK_CACHE_PREFIX, LOCK_TIMEOUT
+from wakawaka.settings import (
+    DEFAULT_INDEX,
+    LOCK_CACHE_PREFIX,
+    LOCK_TIMEOUT,
+    REVISIONS_PER_PAGE,
+    )
 
 __all__ = ['index', 'page', 'edit', 'revisions', 'changes', 'revision_list', 'page_list']
 
@@ -232,16 +238,16 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
                 if have_lock:
                     # Removing lock in case permissions were revoked or lock not removed before.
                     cache.delete(lock_cache_key)
-                
+
                 kwargs = {
                     'slug': page.slug,
                 }
-                
+
                 if group:
                     redirect_to = bridge.reverse('wakawaka_page', group, kwargs=kwargs)
                 else:
                     redirect_to = reverse('wakawaka_page', kwargs=kwargs)
-                
+
                 request.user.message_set.create(message=ugettext('Your changes to %s were saved' % page.slug))
                 return HttpResponseRedirect(redirect_to)
 
@@ -299,7 +305,7 @@ def changes(request, slug, template_name='wakawaka/changes.html', extra_context=
     '''
     Displays the changes between two revisions.
     '''
-    
+
     if extra_context is None:
         extra_context = {}
 
@@ -374,8 +380,21 @@ def revision_list(request, template_name='wakawaka/revision_list.html', extra_co
     else:
         revision_list = Revision.objects.all()
 
+    paginator = Paginator(revision_list, REVISIONS_PER_PAGE)
+
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    try:
+        revisions = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        revisions = paginator.page(paginator.num_pages)
+
     template_context = {
         'revision_list': revision_list,
+        'revisions': revisions,
         'group': group,
         'group_base': group_base,
     }
