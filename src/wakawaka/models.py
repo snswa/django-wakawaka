@@ -47,7 +47,7 @@ class Revision(models.Model):
     creator = models.ForeignKey(User, blank=True, null=True, related_name='wakawaka_revisions')
     creator_ip = models.IPAddressField(_('creator ip'))
     created = models.DateTimeField(_('created'), auto_now_add=True)
-    modified = models.DateTimeField(_('modified'), auto_now=True)
+    modified = models.DateTimeField(_('modified'), auto_now=True, db_index=True)
 
     class Meta:
         verbose_name = _("Revision")
