@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 
@@ -35,9 +36,14 @@ class WikiPage(models.Model):
     def rev(self, rev_id):
         return self.revisions.get(pk=rev_id)
 
-    @models.permalink
-    def get_absolute_url(self):
-        return ('wakawaka_page', [], {'slug': self.slug})
+    def get_absolute_url(self, group=None):
+        kwargs = {
+            'slug': self.slug,
+        }
+        if group:
+            return group.content_bridge.reverse('wakawaka_page', group, kwargs)
+        else:
+            return reverse('wakawaka_page', kwargs=kwargs)
 
 
 class Revision(models.Model):
@@ -55,9 +61,15 @@ class Revision(models.Model):
         ordering = ['-modified']
         get_latest_by = 'modified'
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('wakawaka_page', [], {'slug': self.page.slug, 'rev_id': self.pk})
+        kwargs = {
+            'slug': self.page.slug,
+            'rev_id': self.pk,
+        }
+        if group:
+            return group.content_bridge.reverse('wakawaka_page', group, kwargs)
+        else:
+            return reverse('wakawaka_page', kwargs=kwargs)
 
     def __unicode__(self):
         return ugettext('Revision %(created)s for %(page_slug)s') % {

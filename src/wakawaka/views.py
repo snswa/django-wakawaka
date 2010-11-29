@@ -52,7 +52,7 @@ def page(request, slug, rev_id=None, template_name='wakawaka/page.html', extra_c
         if group:
             queryset = group.content_objects(WikiPage)
         else:
-            queryset = WikiPage.objects.all()
+            queryset = WikiPage.objects.filter(content_type=None, object_id=None)
         page = queryset.get(slug=slug)
         rev = page.current
 
@@ -61,7 +61,7 @@ def page(request, slug, rev_id=None, template_name='wakawaka/page.html', extra_c
             if group:
                 revision_queryset = group.content_objects(Revision, join="page")
             else:
-                revision_queryset = Revision.objects.all()
+                revision_queryset = Revision.objects.filter(page__content_type=None, page__object_id=None)
             rev_specific = revision_queryset.get(pk=rev_id)
             if rev.pk != rev_specific.pk:
                 rev_specific.is_not_current = True
@@ -141,7 +141,7 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
         if group:
             queryset = group.content_objects(WikiPage)
         else:
-            queryset = WikiPage.objects.all()
+            queryset = WikiPage.objects.filter(content_type=None, object_id=None)
         page = queryset.get(slug=slug)
         rev = page.current
         initial = {'content': page.current.content}
@@ -180,7 +180,7 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
     cancel_lock = have_lock and request.GET.get('cancel_lock')
     if is_locked and cancel_lock:
         cache.delete(lock_cache_key)
-        return HttpResponseRedirect(page.get_absolute_url())
+        return HttpResponseRedirect(page.get_absolute_url(group))
 
     allowed_to_reset = request.user.has_perm('wakawaka.reset_lock')
     reset_lock = allowed_to_reset and request.GET.get('reset_lock')
@@ -218,7 +218,7 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
                     if group:
                         queryset = group.content_objects(WikiPage)
                     else:
-                        queryset = WikiPage.objects.all()
+                        queryset = WikiPage.objects.filter(content_type=None, object_id=None)
                     page = queryset.get(slug=slug)
                 except WikiPage.DoesNotExist:
                     # Must be a new one, create that page
@@ -232,16 +232,16 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
                 if have_lock:
                     # Removing lock in case permissions were revoked or lock not removed before.
                     cache.delete(lock_cache_key)
-                
+
                 kwargs = {
                     'slug': page.slug,
                 }
-                
+
                 if group:
                     redirect_to = bridge.reverse('wakawaka_page', group, kwargs=kwargs)
                 else:
                     redirect_to = reverse('wakawaka_page', kwargs=kwargs)
-                
+
                 request.user.message_set.create(message=ugettext('Your changes to %s were saved' % page.slug))
                 return HttpResponseRedirect(redirect_to)
 
@@ -283,7 +283,7 @@ def revisions(request, slug, template_name='wakawaka/revisions.html', extra_cont
     if group:
         queryset = group.content_objects(WikiPage)
     else:
-        queryset = WikiPage.objects.all()
+        queryset = WikiPage.objects.filter(content_type=None, object_id=None)
     page = get_object_or_404(queryset, slug=slug)
 
     template_context = {
@@ -299,7 +299,7 @@ def changes(request, slug, template_name='wakawaka/changes.html', extra_context=
     '''
     Displays the changes between two revisions.
     '''
-    
+
     if extra_context is None:
         extra_context = {}
 
@@ -324,8 +324,8 @@ def changes(request, slug, template_name='wakawaka/changes.html', extra_context=
             revision_queryset = group.content_objects(Revision, join="page")
             wikipage_queryset = group.content_objects(WikiPage)
         else:
-            revision_queryset = Revision.objects.all()
-            wikipage_queryset = WikiPage.objects.all()
+            revision_queryset = Revision.objects.filter(page__content_type=None, page__object_id=None)
+            wikipage_queryset = WikiPage.objects.filter(content_type=None, object_id=None)
         rev_a = revision_queryset.get(pk=rev_a_id)
         rev_b = revision_queryset.get(pk=rev_b_id)
         page = wikipage_queryset.get(slug=slug)
@@ -372,7 +372,7 @@ def revision_list(request, template_name='wakawaka/revision_list.html', extra_co
     if group:
         revision_list = group.content_objects(Revision, join="page")
     else:
-        revision_list = Revision.objects.all()
+        revision_list = Revision.objects.filter(page__content_type=None, page__object_id=None)
 
     template_context = {
         'revision_list': revision_list,
@@ -402,7 +402,7 @@ def page_list(request, template_name='wakawaka/page_list.html', extra_context=No
     if group:
         page_list = group.content_objects(WikiPage)
     else:
-        page_list = WikiPage.objects.all()
+        page_list = WikiPage.objects.filter(content_type=None, object_id=None)
     page_list = page_list.order_by('slug')
 
     template_context = {
