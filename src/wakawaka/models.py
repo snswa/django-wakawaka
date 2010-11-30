@@ -36,10 +36,11 @@ class WikiPage(models.Model):
     def rev(self, rev_id):
         return self.revisions.get(pk=rev_id)
 
-    def get_absolute_url(self, group=None):
+    def get_absolute_url(self):
         kwargs = {
             'slug': self.slug,
         }
+        group = self.group
         if group:
             return group.content_bridge.reverse('wakawaka_page', group, kwargs)
         else:
@@ -66,6 +67,7 @@ class Revision(models.Model):
             'slug': self.page.slug,
             'rev_id': self.pk,
         }
+        group = self.page.group
         if group:
             return group.content_bridge.reverse('wakawaka_page', group, kwargs)
         else:
