@@ -62,7 +62,10 @@ def page(request, slug, rev_id=None, template_name='wakawaka/page.html', extra_c
                 revision_queryset = group.content_objects(Revision, join="page")
             else:
                 revision_queryset = Revision.objects.filter(page__content_type=None, page__object_id=None)
-            rev_specific = revision_queryset.get(pk=rev_id)
+            try:
+                rev_specific = revision_queryset.get(pk=rev_id, page__slug=slug)
+            except Revision.DoesNotExist:
+                raise Http404()
             if rev.pk != rev_specific.pk:
                 rev_specific.is_not_current = True
             rev = rev_specific
