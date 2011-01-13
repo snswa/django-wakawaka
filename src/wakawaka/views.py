@@ -150,7 +150,7 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
         initial = {'content': page.current.content}
 
         # Do not allow editing wiki pages if the user has no permission
-        if not request.user.has_perms(('wakawaka.change_wikipage', 'wakawaka.change_revision' )):
+        if not request.user.has_perms(('wakawaka.change_wikipage', 'wakawaka.change_revision'), page):
             if have_lock:
                 # Removing lock in case permissions were revoked or lock not removed before.
                 cache.delete(lock_cache_key)
@@ -170,7 +170,7 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
     except WikiPage.DoesNotExist:
 
         # Do not allow adding wiki pages if the user has no permission
-        if not request.user.has_perms(('wakawaka.add_wikipage', 'wakawaka.add_revision',)):
+        if not request.user.has_perms(('wakawaka.add_wikipage', 'wakawaka.add_revision'), group):
             return HttpResponseForbidden(ugettext('You don\'t have permission to add wiki pages.'))
 
         page = WikiPage(slug=slug)
@@ -185,7 +185,7 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
         cache.delete(lock_cache_key)
         return HttpResponseRedirect(page.get_absolute_url())
 
-    allowed_to_reset = request.user.has_perm('wakawaka.reset_lock')
+    allowed_to_reset = request.user.has_perm('wakawaka.reset_lock', group)
     reset_lock = allowed_to_reset and request.GET.get('reset_lock')
     if not is_locked or reset_lock:
         cache.set(lock_cache_key, (lock_id, lock_authorized, datetime.now()), LOCK_TIMEOUT)
@@ -196,9 +196,9 @@ def edit(request, slug, rev_id=None, template_name='wakawaka/edit.html',
     # Don't display the delete form if the user has nor permission
     delete_form = None
     # The user has permission, then do
-    if request.user.has_perm('wakawaka.delete_wikipage') or \
-       request.user.has_perm('wakawaka.delete_revision'):
-        delete_form = wiki_delete_form(request)
+    if request.user.has_perm('wakawaka.delete_wikipage', page) or \
+       request.user.has_perm('wakawaka.delete_revision', page):
+        delete_form = wiki_delete_form(request, page)
         if request.method == 'POST' and request.POST.get('delete'):
             delete_form = wiki_delete_form(request, request.POST)
             if delete_form.is_valid():
