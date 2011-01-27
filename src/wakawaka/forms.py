@@ -5,6 +5,12 @@ from django.core.urlresolvers import reverse
 from wakawaka.models import Revision, WikiPage
 from wakawaka import settings
 
+
+class CreateWikiPageForm(forms.Form):
+
+    slug = forms.RegexField(label=_('Page name'), max_length=255, regex=settings.WIKI_SLUG)
+
+
 class WikiPageForm(forms.Form):
     content = forms.CharField(
         label=_('Content'),

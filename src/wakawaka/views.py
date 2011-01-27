@@ -11,7 +11,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django.contrib.auth.models import User
 
-from wakawaka.forms import WikiPageForm, DeleteWikiPageForm
+from wakawaka.forms import WikiPageForm, CreateWikiPageForm, DeleteWikiPageForm
 from wakawaka.models import WikiPage, Revision
 from wakawaka.settings import DEFAULT_INDEX, LOCK_CACHE_PREFIX, LOCK_TIMEOUT
 
@@ -417,3 +417,40 @@ def page_list(request, template_name='wakawaka/page_list.html', extra_context=No
     template_context.update(extra_context)
     return render_to_response(template_name, template_context,
                               RequestContext(request))
+
+
+def create_or_redirect(request, extra_context=None, *args, **kwargs):
+    extra_context = extra_context or {}
+
+    # be group aware
+    group = getattr(request, "group", None)
+    if group:
+        bridge = request.bridge
+        group_base = bridge.group_base_template()
+    else:
+        bridge = None
+        group_base = None
+
+    if group:
+        page_list = group.content_objects(WikiPage)
+    else:
+        page_list = WikiPage.objects.filter(content_type=None, object_id=None)
+
+    if request.method == 'POST':
+        form = CreateWikiPageForm(data=request.POST)
+        if form.is_valid():
+            kwargs = {
+                'slug': form.cleaned_data['slug'],
+            }
+            if group:
+                redirect_to = bridge.reverse('wakawaka_page', group, kwargs=kwargs)
+            else:
+                redirect_to = reverse('wakawaka_page', kwargs=kwargs)
+            return HttpResponseRedirect(redirect_to)
+    else:
+        form = CreateWikiPageForm()
+    template_context = dict(
+        extra_context,
+        form=form,
+    )
+    return render_to_response(template_name, template_context, RequestContext(request))

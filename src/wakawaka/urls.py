@@ -11,6 +11,7 @@ urlpatterns = patterns('wakawaka.views',
     # Revision and Page list
     url(r'^history/$', views.revision_list, name='wakawaka_revision_list'),
     url(r'^index/$', views.page_list, name='wakawaka_page_list'),
+    url(r'^create/$', views.create_or_redirect, name='wakawaka_create_page'),
 
     # Revision list for page
     url(r'^(?P<slug>%s)/history/$' % WIKI_SLUG, views.revisions, name='wakawaka_revision_list'),
