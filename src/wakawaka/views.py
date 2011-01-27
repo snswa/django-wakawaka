@@ -17,7 +17,7 @@ from wakawaka.settings import DEFAULT_INDEX, LOCK_CACHE_PREFIX, LOCK_TIMEOUT
 
 __all__ = ['index', 'page', 'edit', 'revisions', 'changes', 'revision_list', 'page_list']
 
-def index(request, template_name='wakawaka/page.html'):
+def index(request, template_name='wakawaka/page.html', extra_context=None):
     '''
     Redirects to the default wiki index name.
     '''
