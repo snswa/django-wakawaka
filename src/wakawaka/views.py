@@ -419,7 +419,7 @@ def page_list(request, template_name='wakawaka/page_list.html', extra_context=No
                               RequestContext(request))
 
 
-def create_or_redirect(request, extra_context=None, *args, **kwargs):
+def create_or_redirect(request, template_name='wakawaka/create.html', extra_context=None, *args, **kwargs):
     extra_context = extra_context or {}
 
     # be group aware
